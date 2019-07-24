@@ -7,508 +7,466 @@
 //
 
 #import "ViewController.h"
-#import "QTRichEditorText/QTRichEditorText.h"
-#import "HXPhotoPicker.h"
-#import "HXAlbumListViewController.h"
+#import <JavaScriptCore/JavaScriptCore.h>
+#import "QTRichTextEditor.h"
+
 #define SCREEN_WIDTH  ([[UIScreen mainScreen] bounds].size.width)
 #define SCREEN_HEIGHT ([[UIScreen mainScreen] bounds].size.height)
 
-#define kEditorURL @"richText_editor"
+#define kEditorURL @"QTRichTextEditor"
 
-//#define kEditorURL @"z-test"
-@interface ViewController ()<UITextViewDelegate,UIWebViewDelegate,KWEditorBarDelegate,KWFontStyleBarDelegate,HXAlbumListViewControllerDelegate,UIAlertViewDelegate>
-
-@property (nonatomic,strong) UIScrollView *scrollView;
-@property (nonatomic,strong) UIWebView *webView;
-
-@property (nonatomic,assign) BOOL isExitView;
-
-@property (nonatomic,copy) NSString *tempArticleID;
-
-@property (nonatomic,copy) NSString *tempTitle;
-@property (nonatomic,copy) NSString *tempContent;
-
-@property (nonatomic,assign) BOOL isLoadFinsh;
-@property (nonatomic,strong) NSTimer *timer;
-
-@property (nonatomic,strong) KWEditorBar *toolBarView;
-@property (nonatomic,strong) KWFontStyleBar *fontBar;
-@property (nonatomic,strong) HXPhotoManager *manager;
-@property (nonatomic,strong) HXPhotoView *photoView;
-
-@property (nonatomic,assign) BOOL showHtml;
-
+@interface ViewController () <UIWebViewDelegate, QTRichTextToolBarDelegate>
 
 /**
- *  存放所有正在上传及失败的图片model
+ 富文本编辑视图
  */
-@property (nonatomic,strong) NSMutableArray *uploadPics;
+@property (nonatomic, strong) UIWebView *editorView;
+/**
+ 工具条
+ */
+@property (nonatomic, strong) QTRichTextToolBar *toolBar;
+/**
+ 字体样式控件
+ */
+@property (nonatomic, strong) QTFontStyleView *styleView;
+/**
+ 字体大小控件
+ */
+@property (nonatomic, strong) QTFontSizeView *sizeView;
+/**
+ 对齐方式控件
+ */
+@property (nonatomic, strong) QTAlignView *alignView;
+/**
+ 字体颜色控件
+ */
+@property (nonatomic, strong) QTFontColorView *colorView;
+/**
+ 是否是粘贴操作
+ */
+@property (nonatomic, assign) BOOL isEditorPaste;
+/**
+ UIWebView是否加载完成
+ */
+@property (nonatomic, assign) BOOL isFinishLoad;
+
 @end
 
 @implementation ViewController
-- (NSMutableArray *)uploadPics{
-    if (!_uploadPics) {
-        _uploadPics = [NSMutableArray array];
-    }
-    return _uploadPics;
+
+- (IBAction)onCompleted:(id)sender {
+    [self.view endEditing:YES];
 }
-- (KWEditorBar *)toolBarView{
-    if (!_toolBarView) {
-        _toolBarView = [KWEditorBar editorBar];
-        _toolBarView.frame = CGRectMake(0,SCREEN_HEIGHT - KWEditorBar_Height, self.view.frame.size.width, KWEditorBar_Height);
-        _toolBarView.backgroundColor = COLOR(237, 237, 237, 1);
-    }
-    return _toolBarView;
-}
-- (KWFontStyleBar *)fontBar{
-    if (!_fontBar) {
-        _fontBar = [[KWFontStyleBar alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(self.toolBarView.frame) - KWFontBar_Height - KWEditorBar_Height, self.view.frame.size.width, KWFontBar_Height)];
-        _fontBar.delegate = self;
-        [_fontBar.heading2Item setSelected:YES];
-        
-    }
-    return _fontBar;
-}
-- (UIWebView *)webView{
-    if (!_webView) {
-        _webView = [[UIWebView alloc] init];
-        _webView.delegate = self;
-        NSString *path = [[NSBundle mainBundle] bundlePath];
-        NSURL *baseURL = [NSURL fileURLWithPath:path];
-        NSString * htmlPath = [[NSBundle mainBundle] pathForResource:kEditorURL                                                              ofType:@"html"];
-        NSString * htmlCont = [NSString stringWithContentsOfFile:htmlPath
-                                                        encoding:NSUTF8StringEncoding
-                                                           error:nil];
-        [_webView loadHTMLString:htmlCont baseURL:baseURL];
-        _webView.scrollView.bounces=NO;
-        _webView.hidesInputAccessoryView = YES;
-        //        _webView.detectsPhoneNumbers = NO;
-        
-    }
-    return _webView;
-}
+
+#pragma mark - 父类方法
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    /// config
-    [self.view addSubview:self.webView];
-    [self.view addSubview:self.toolBarView];
-    
-    
+    [self.navigationController.navigationBar setTranslucent:NO];
+    [self setupViews];
+    [self updateViewsFrame];
+    [self loadResource];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyBoardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
-    
-    self.toolBarView.delegate = self;
-    [self.toolBarView addObserver:self forKeyPath:@"transform" options:
-     NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew context:nil];
-    
-    
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"HTML" style:UIBarButtonItemStylePlain target:self action:@selector(getHTMLText)];
-    
 }
-- (void)getHTMLText{
-    
-    NSLog(@"%@",[self.webView contentHtmlText]);
-    
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
 }
--(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
-{
-    if([keyPath isEqualToString:@"transform"]){
-        
-        CGRect fontBarFrame = self.fontBar.frame;
-        fontBarFrame.origin.y = CGRectGetMaxY(self.toolBarView.frame)- KWFontBar_Height - KWEditorBar_Height;
-        self.fontBar.frame = fontBarFrame;
-    }else{
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+#pragma mark - 私有方法
+- (void)updateHTML {
+    if (!self.html) {
+        _html = @"";
     }
+    [self.editorView qt_insertHTML:self.html];
 }
 
-- (void)viewDidLayoutSubviews{
-    [super viewDidLayoutSubviews];
+- (void)loadResource {
+    // Create a string with the contents of QTRichTextEditor.html
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:kEditorURL ofType:@"html"];
+    NSData *htmlData = [NSData dataWithContentsOfFile:filePath];
+    NSString *htmlString = [[NSString alloc] initWithData:htmlData encoding:NSUTF8StringEncoding];
     
-    self.webView.frame = CGRectMake(0,0, self.view.frame.size.width,self.view.frame.size.height - KWEditorBar_Height);
+    // Add JQuery.js to the html file
+    NSString *jquery = [[NSBundle mainBundle] pathForResource:@"jQuery" ofType:@"js"];
+    NSString *jqueryString = [[NSString alloc] initWithData:[NSData dataWithContentsOfFile:jquery] encoding:NSUTF8StringEncoding];
+    htmlString = [htmlString stringByReplacingOccurrencesOfString:@"<!-- jQuery -->" withString:jqueryString];
+    
+    //Add JSBeautifier.js to the html file
+    NSString *beautifier = [[NSBundle mainBundle] pathForResource:@"JSBeautifier" ofType:@"js"];
+    NSString *beautifierString = [[NSString alloc] initWithData:[NSData dataWithContentsOfFile:beautifier] encoding:NSUTF8StringEncoding];
+    htmlString = [htmlString stringByReplacingOccurrencesOfString:@"<!-- jsbeautifier -->" withString:beautifierString];
+    
+    //Add ZSSRichTextEditor.js to the html file
+    NSString *source = [[NSBundle mainBundle] pathForResource:@"QTRichTextEditor" ofType:@"js"];
+    NSString *jsString = [[NSString alloc] initWithData:[NSData dataWithContentsOfFile:source] encoding:NSUTF8StringEncoding];
+    htmlString = [htmlString stringByReplacingOccurrencesOfString:@"<!--editor-->" withString:jsString];
+    
+    [self.editorView loadHTMLString:htmlString baseURL:self.baseURL];
 }
 
-
-
-#pragma mark -webviewdelegate
-- (void)webViewDidFinishLoad:(UIWebView *)webView{
-    NSLog(@"webViewDidFinishLoad");
-}
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error{
-    NSLog(@"NSError = %@",error);
-    
-    if([error code] == NSURLErrorCancelled){
-        return;
-    }
-}
-//获取IMG标签
--(NSArray*)getImgTags:(NSString *)htmlText
-{
-    if (htmlText == nil) {
-        return nil;
-    }
-    NSError *error;
-    NSString *regulaStr = @"<img[^>]+src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>";
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regulaStr
-                                                                           options:NSRegularExpressionCaseInsensitive
-                                                                             error:&error];
-    NSArray *arrayOfAllMatches = [regex matchesInString:htmlText options:0 range:NSMakeRange(0, [htmlText length])];
-    
-    return arrayOfAllMatches;
-}
-
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
-{
-    NSString *urlString = request.URL.absoluteString;
-    NSLog(@"loadURL = %@",urlString);
-    
-    [self handleEvent:urlString];
-    
-    if ([urlString rangeOfString:@"re-state-content://"].location != NSNotFound) {
-        NSString *className = [urlString stringByReplacingOccurrencesOfString:@"re-state-content://" withString:@""];
+#pragma mark - 监听富文本内容改变
+- (void)observerEditorTextDidChanged:(UIWebView *)webView {
+    __weak typeof(self) weakSelf = self;
+    JSContext *ctx = [webView valueForKeyPath:@"documentView.webView.mainFrame.javaScriptContext"];
+    ctx[@"contentUpdateCallback"] = ^(JSValue *msg) {
+        __weak typeof(weakSelf) StrongSelf = weakSelf;
+        [StrongSelf editorDidChangeWithText:[StrongSelf.editorView qt_getText] andHTML:[StrongSelf.editorView qt_getHTML]];
+        [StrongSelf checkForMentionOrHashtagInText:[StrongSelf.editorView qt_getText]];
         
-        [self.fontBar updateFontBarWithButtonName:className];
-        
-        if ([self.webView contentText].length <= 0) {
-            [self.webView showContentPlaceholder];
-            if ([self getImgTags:[self.webView contentHtmlText]].count > 0) {
-                [self.webView clearContentPlaceholder];
-            }
-        }else{
-            [self.webView clearContentPlaceholder];
+        if (StrongSelf.isEditorPaste) {
+//            [StrongSelf.editorView qt_blurTextEditor];
+            StrongSelf.isEditorPaste = NO;
         }
-        
-        if ([[className componentsSeparatedByString:@","] containsObject:@"unorderedList"]) {
-            [self.webView clearContentPlaceholder];
-        }
-        
-        
-    }
+    };
     
-    [self handleWithString:urlString];
-    return YES;
-}
-#pragma mar - webView监听处理事件
-- (void)handleEvent:(NSString *)urlString{
-    if ([urlString hasPrefix:@"re-state-content://"]) {
-        self.fontBar.hidden = NO;
-        self.toolBarView.hidden = NO;
-        //        if ([self.webView contentText].length <= 0) {
-        //            [self.webView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
-        //        }
-    }
+    ctx[@"contentPasteCallback"] = ^(JSValue *msg) {
+        __weak typeof(weakSelf) StrongSelf = weakSelf;
+        StrongSelf.isEditorPaste = YES;
+    };
+    [ctx evaluateScript:@"document.getElementById('qt_editor_content').addEventListener('input', contentUpdateCallback, false);"];
     
-    if ([urlString hasPrefix:@"re-state-title://"]) {
-        self.fontBar.hidden = YES;
-        self.toolBarView.hidden = YES;
-    }
-    
+    [ctx evaluateScript:@"document.getElementById('qt_editor_content').addEventListener('paste', contentPasteCallback, false);"];
 }
 
-
-- (void)dealloc{
-    @try {
-        [self.toolBarView removeObserver:self forKeyPath:@"transform"];
-    } @catch (NSException *exception)
-    {
-        NSLog(@"Exception: %@", exception);
-    } @finally {
-        // Added to show finally works as well
-    }
-    self.timer = nil;
+- (void)editorDidChangeWithText:(NSString *)text andHTML:(NSString *)html {
+    NSLog(@"editorDidChangeWithText=>text: %@, html: %@", text, html);
 }
 
-
-/**
- *  是否显示占位文字
- */
-- (void)isShowPlaceholder{
-    if ([self.webView contentText].length <= 0)
-    {
-        [self.webView showContentPlaceholder];
-    }else{
-        [self.webView clearContentPlaceholder];
-    }
-}
-
-#pragma mark -editorbarDelegate
-- (void)editorBar:(KWEditorBar *)editorBar didClickIndex:(NSInteger)buttonIndex{
-    switch (buttonIndex) {
-        case 0:{
-            //显示或隐藏键盘
-            if (self.toolBarView.transform.ty < 0) {
-                [self.webView hiddenKeyboard];
-            }else{
-                [self.webView showKeyboardContent];
+- (void)checkForMentionOrHashtagInText:(NSString *)text {
+    if ([text containsString:@" "] && [text length] > 0) {
+        NSString *lastWord = nil;
+        NSString *matchedWord = nil;
+        BOOL ContainsHashtag = NO;
+        BOOL ContainsMention = NO;
+        
+        NSRange range = [text rangeOfString:@" " options:NSBackwardsSearch];
+        lastWord = [text substringFromIndex:range.location];
+        
+        if (lastWord != nil) {
+            //Check if last word typed starts with a #
+            NSRegularExpression *hashtagRegex = [NSRegularExpression regularExpressionWithPattern:@"#(\\w+)" options:0 error:nil];
+            NSArray *hashtagMatches = [hashtagRegex matchesInString:lastWord options:0 range:NSMakeRange(0, lastWord.length)];
+            
+            for (NSTextCheckingResult *match in hashtagMatches) {
+                NSRange wordRange = [match rangeAtIndex:1];
+                NSString *word = [lastWord substringWithRange:wordRange];
+                matchedWord = word;
+                ContainsHashtag = YES;
             }
             
-        }
-            break;
-        case 1:{
-            //回退
-            [self.webView stringByEvaluatingJavaScriptFromString:@"document.execCommand('undo')"];
-        }
-            break;
-        case 2:{
-            [self.webView stringByEvaluatingJavaScriptFromString:@"document.execCommand('redo')"];
-        }
-            break;
-        case 3:{
-            //显示更多区域
-            editorBar.fontButton.selected = !editorBar.fontButton.selected;
-            if (editorBar.fontButton.selected) {
-                [self.view addSubview:self.fontBar];
-            }else{
-                [self.fontBar removeFromSuperview];
+            if (!ContainsHashtag) {
+                //Check if last word typed starts with a @
+                NSRegularExpression *mentionRegex = [NSRegularExpression regularExpressionWithPattern:@"@(\\w+)" options:0 error:nil];
+                NSArray *mentionMatches = [mentionRegex matchesInString:lastWord options:0 range:NSMakeRange(0, lastWord.length)];
+                
+                for (NSTextCheckingResult *match in mentionMatches) {
+                    NSRange wordRange = [match rangeAtIndex:1];
+                    NSString *word = [lastWord substringWithRange:wordRange];
+                    matchedWord = word;
+                    ContainsMention = YES;
+                }
             }
         }
-            break;
-        case 4:{
-            //插入地址
-            [self.webView insertLinkUrl:@"https://www.baidu.com/" title:@"百度" content:@"百度一下"];
-        }break;
-        case 5:{
-            //插入图片
-            if (!self.toolBarView.keyboardButton.selected) {
-                [self.webView showKeyboardContent];
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self showPhotos];
-                });
-            }else{
-                [self showPhotos];
-            }
+        
+        if (ContainsHashtag) {
+            [self hashtagRecognizedWithWord:matchedWord];
         }
-            break;
-        default:
-            break;
+        
+        if (ContainsMention) {
+            [self mentionRecognizedWithWord:matchedWord];
+        }
     }
-    
-}
-#pragma mark - fontbardelegate
-- (void)fontBar:(KWFontStyleBar *)fontBar didClickBtn:(UIButton *)button{
-    if (self.toolBarView.transform.ty>=0) {
-        [self.webView showKeyboardContent];
-    }
-    switch (button.tag) {
-        case 0:{
-            //粗体
-            [self.webView bold];
-        }
-            break;
-        case 1:{//下划线
-            [self.webView underline];
-        }
-            break;
-        case 2:{//斜体
-            [self.webView italic];
-        }
-            break;
-        case 3:{//14号字体
-            [self.webView setFontSize:@"2"];
-        }
-            break;
-        case 4:{//16号字体
-            [self.webView setFontSize:@"3"];
-        }
-            break;
-        case 5:{//18号字体
-            [self.webView setFontSize:@"4"];
-        }
-            break;
-        case 6:{//左对齐
-            [self.webView justifyLeft];
-        }
-            break;
-        case 7:{//居中对齐
-            [self.webView justifyCenter];
-        }
-            break;
-        case 8:{//右对齐
-            [self.webView justifyRight];
-        }
-            break;
-        case 9:{//无序
-            [self.webView unorderlist];
-        }
-            break;
-        case 10:{
-            //缩进
-            button.selected = !button.selected;
-            if (button.selected) {
-                [self.webView indent];
-            }else{
-                [self.webView outdent];
-            }
-        }
-            break;
-        case 11:{
-            
-        }
-            break;
-        default:
-            break;
-    }
-    
-}
-- (void)fontBarResetNormalFontSize{
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self.webView normalFontSize];
-    });
 }
 
+//Blank implementation
+- (void)hashtagRecognizedWithWord:(NSString *)word {}
 
+//Blank implementation
+- (void)mentionRecognizedWithWord:(NSString *)word {}
 
-#pragma mark -keyboard
+#pragma mark - Keyboard Frame changed
 - (void)keyBoardWillChangeFrame:(NSNotification*)notification{
     CGRect frame = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGFloat duration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     if (frame.origin.y == SCREEN_HEIGHT) {
         [UIView animateWithDuration:duration animations:^{
-            self.toolBarView.transform =  CGAffineTransformIdentity;
-            self.toolBarView.keyboardButton.selected = NO;
+            self.toolBar.transform =  CGAffineTransformIdentity;
+            CGRect editorFrame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 44);
+            self.editorView.frame = editorFrame;
+            [self updateAllToolBarMenuViewsFrame];
         }];
     }else{
         [UIView animateWithDuration:duration animations:^{
-            self.toolBarView.transform = CGAffineTransformMakeTranslation(0, -frame.size.height);
-            self.toolBarView.keyboardButton.selected = YES;
+            self.toolBar.transform = CGAffineTransformMakeTranslation(0, -frame.size.height);
             
+            CGRect editorFrame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 44 - frame.size.height);
+            self.editorView.frame = editorFrame;
+            [self updateAllToolBarMenuViewsFrame];
         }];
     }
 }
 
-
-#pragma mark -上传图片
-- (void)albumListViewController:(HXAlbumListViewController *)albumListViewController didDoneAllList:(NSArray<HXPhotoModel *> *)allList photos:(NSArray<HXPhotoModel *> *)photoList videos:(NSArray<HXPhotoModel *> *)videoList original:(BOOL)original{
-    
-    [self.manager clearSelectedList];
-    
-    if (photoList.count > 0) {
-        for (int i = 0; i<photoList.count; i++) {
-            
-            HXPhotoModel *picM = photoList[i];
-            WGUploadPictureModel *uploadM = [[WGUploadPictureModel alloc] init];
-            uploadM.image = picM.thumbPhoto;
-            uploadM.key = [NSString uuid];
-            uploadM.imageData = UIImageJPEGRepresentation(picM.thumbPhoto,0.8f);
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                //1、插入本地图片
-                [self.webView inserImage:uploadM.imageData key:uploadM.key];
-                
-                //2、模拟网络请求上传图片 更新进度
-                [self.webView inserImageKey:uploadM.key progress:0.5];
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self.webView inserImageKey:uploadM.key progress:1];
-                    //                    BOOL error = false; //上传成功样式
-                    
-                    BOOL error = true; //上传失败样式
-                    if (!error) {
-                        //3、上传成功替换返回的网络地址图片
-                        [self.webView inserSuccessImageKey:uploadM.key imgUrl:@"https://ss0.baidu.com/6ONWsjip0QIZ8tyhnq/it/u=4278445236,4070967445&fm=173&app=25&f=JPEG?w=218&h=146&s=B1145A915E28110D18B9A940030080B2"];
-                        
-                        uploadM.type = WGUploadImageModelTypeError;
-                        
-                        if ([self.uploadPics containsObject:uploadM]) {
-                            [self.uploadPics removeObject:uploadM];
-                        }
-                    }else{
-                        //3、上传失败 显示失败的样式
-                        [self.webView uploadErrorKey:uploadM.key];
-                        
-                        uploadM.type = WGUploadImageModelTypeError;
-                        
-                        [self.uploadPics addObject:uploadM];
-                    }
-                    
-                });
-                
-                
-            });
-        }
-        
-    }
-    
+#pragma mark - 初始化视图
+- (void)setupViews {
+    [self.view addSubview:self.editorView];
+    [self.view addSubview:self.toolBar];
 }
 
-#pragma mark -图片点击操作
-- (BOOL)handleWithString:(NSString *)urlString{
-    
-    //点击的图片标记URL（自定义）
-    NSString *preStr = @"protocol://iOS?code=uploadResult&data=";
-    
-    if ([urlString hasPrefix:preStr]) {
-        NSString *result = [urlString stringByReplacingOccurrencesOfString:preStr withString:@" "];
-        
-        NSString *jsonString = [result stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-        
-        NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
-        NSError *err;
-        
-        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:&err];
-        
-        NSString *meg = [NSString stringWithFormat:@"上传的图片ID为%@",dict[@"imgId"]];
-        
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:meg message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-        
-        //上传状态 - 默认上传成功
-        BOOL uploadState = YES;
-        
-        for (WGUploadPictureModel *upPic in self.uploadPics) {
-            if (upPic.type == WGUploadImageModelTypeError) {
-                //上传失败的
-                uploadState = false;
-            }
-        }
-        
-        
-        UIAlertAction *ok = [UIAlertAction actionWithTitle:uploadState?@"删除图片":@"重新上传" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            //根据自身业务需要处理图片操作：如删除、重新上传图片操作等
-            if (uploadState) {
-                //例如删除图片执行函数imgID=key;
-                [self.webView deleteImageKey:dict[@"imgId"]];
-            }else{
-                //见387行代码 上传片段 。。。
-            }
-        }];
-        
-        [alert addAction:ok];
-        [self presentViewController:alert animated:YES completion:nil];
-        return NO;
+- (void)updateViewsFrame {
+    NSLog(@"updateViewsFrame=>width: %f height: %f", self.view.frame.size.width, self.view.frame.size.height);
+    self.editorView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 44);
+    self.toolBar.frame = CGRectMake(0, self.view.frame.size.height - 44 - 64, self.view.frame.size.width, 44);
+    [self updateAllToolBarMenuViewsFrame];
+}
+
+- (void)updateAllToolBarMenuViewsFrame {
+    [self updateFontStyleViewFrame:self.toolBar.styleBtn];
+    [self updateFontSizeViewFrame:self.toolBar.sizeBtn];
+    [self updateAlignViewFrame:self.toolBar.alignBtn];
+    [self updateFontColorViewFrame:self.toolBar.colorBtn];
+}
+
+- (void)updateFontStyleViewFrame:(UIButton *)sender {
+    CGRect rect = [self relativeFrame:sender];
+    CGFloat w = FONT_STYLE_VIEW_WIDTH;
+    CGFloat h = FONT_STYLE_VIEW_HEIGHT;
+    CGFloat mid = CGRectGetMidX(rect);
+    CGFloat x = mid - (w * 0.5);
+    if (x < 16) {
+        x = 16;
     }
+    CGFloat y = self.toolBar.frame.origin.y - 11 - h;
+    self.styleView.frame = CGRectMake(x, y, w, h);
+}
+
+- (void)updateFontSizeViewFrame:(UIButton *)sender {
+    CGRect rect = [self relativeFrame:sender];
+    CGFloat w = FONT_SIZE_VIEW_WIDTH;
+    CGFloat h = FONT_SIZE_VIEW_HEIGHT;
+    CGFloat mid = CGRectGetMidX(rect);
+    CGFloat x = mid - (w * 0.5);
+    if (x < 16) {
+        x = 16;
+    }
+    CGFloat y = self.toolBar.frame.origin.y - 11 - h;
+    self.sizeView.frame = CGRectMake(x, y, w, h);
+}
+
+- (void)updateAlignViewFrame:(UIButton *)sender {
+    CGRect rect = [self relativeFrame:sender];
+    CGFloat w = ALIGN_VIEW_WIDTH;
+    CGFloat h = ALIGN_VIEW_HEIGHT;
+    CGFloat mid = CGRectGetMidX(rect);
+    CGFloat x = mid - (w * 0.5);
+    if (x < 16) {
+        x = 16;
+    }
+    CGFloat y = self.toolBar.frame.origin.y - 11 - h;
+    self.alignView.frame = CGRectMake(x, y, w, h);
+}
+
+- (void)updateFontColorViewFrame:(UIButton *)sender {
+    CGRect rect = [self relativeFrame:sender];
+    CGFloat w = FONT_COLOR_VIEW_WIDTH;
+    CGFloat h = FONT_COLOR_VIEW_HEIGHT;
+    CGFloat mid = CGRectGetMidX(rect);
+    CGFloat x = mid - (w * 0.5);
+    if ((x + w + 16) > CGRectGetMaxX(self.toolBar.frame)) {
+        x = CGRectGetMaxX(self.toolBar.frame) - 16 - w;
+    }
+    CGFloat y = self.toolBar.frame.origin.y - 11 - h;
+    self.colorView.frame = CGRectMake(x, y, w, h);
+}
+
+- (CGRect)relativeFrame:(UIView *)view {
+    UIWindow * window=[[[UIApplication sharedApplication] delegate] window];
+    CGRect frame = [view convertRect:view.bounds toView:window];
+    return frame;
+}
+
+#pragma mark - UIWebViewDelegate
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    NSLog(@"shouldStartLoadWithRequest=>request: %@", [[request URL] absoluteString]);
     return YES;
 }
 
-#pragma mark -图片选择器
-- (void)showPhotos{
-    HXAlbumListViewController *vc = [[HXAlbumListViewController alloc] init];
-    vc.manager = self.manager;
-    vc.delegate = self;
-    HXCustomNavigationController *nav = [[HXCustomNavigationController alloc] initWithRootViewController:vc];
-    nav.supportRotation = self.manager.configuration.supportRotation;
-    [self presentViewController:nav animated:YES completion:nil];
-    
-}
-- (HXPhotoManager *)manager {
-    if (!_manager) {
-        _manager = [[HXPhotoManager alloc] initWithType:HXPhotoManagerSelectedTypePhoto];
-        _manager.configuration.toolBarTitleColor = COLOR(33,189,109,1);
-        _manager.configuration.videoMaxNum = 1;
-        _manager.configuration.imageMaxSize = 5;
-        _manager.configuration.selectTogether = NO;
-        _manager.configuration.deleteTemporaryPhoto = NO;
-        _manager.configuration.rowCount = 4;
-        _manager.configuration.reverseDate = YES;
-        _manager.configuration.singleJumpEdit = NO;
-        _manager.configuration.saveSystemAblum = YES;
-        _manager.configuration.supportRotation = NO;
-        _manager.configuration.hideOriginalBtn = NO;
-        _manager.configuration.navigationTitleColor = [UIColor blackColor];
-        _manager.configuration.showDateSectionHeader =NO;
-        _manager.configuration.singleSelected = NO;
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    NSLog(@"webViewDidFinishLoad...");
+    if (self.shouldShowKeyboard) {
+        [self.editorView qt_focusTextEditor];
     }
-    return _manager;
+    
+    if (_placeholder && [_placeholder length] != 0) {
+        [self.editorView qt_setPlaceholderText:_placeholder];
+    }
+    
+    [self observerEditorTextDidChanged:webView];
+    
+    self.isFinishLoad = YES;
 }
+
+#pragma mark - QTRichTextToolBarDelegate
+- (void)toolBar:(QTRichTextToolBar *)toolBar buttonClick:(UIButton *)sender {
+    switch (sender.tag) {
+        case 100:
+            // 隐藏键盘
+            [self.view endEditing:YES];
+            break;
+            
+        case 101: {
+            // 字体样式
+            [self hideAllToolBarMenuViews];
+            [self showFontStyleViewWithSender:sender];
+        } break;
+            
+        case 102: {
+            // 字体大小
+            [self hideAllToolBarMenuViews];
+            [self showFontSizeViewWithSender:sender];
+        } break;
+            
+        case 103: {
+            // 对齐方式
+            [self hideAllToolBarMenuViews];
+            [self showAlignViewWithSender:sender];
+        } break;
+            
+        case 104: {
+            // 字体颜色
+            [self hideAllToolBarMenuViews];
+            [self showFontColorViewWithSender:sender];
+        } break;
+            
+        case 105:
+            // 撤销
+            [self hideAllToolBarMenuViews];
+            [self.editorView qt_undo];
+            break;
+            
+        case 106:
+            // 重做
+            [self hideAllToolBarMenuViews];
+            [self.editorView qt_redo];
+            break;
+    }
+}
+
+- (void)hideAllToolBarMenuViews {
+    if (self.styleView.superview) {
+        [self.styleView removeFromSuperview];
+    }
+    if (self.sizeView.superview) {
+        [self.sizeView removeFromSuperview];
+    }
+    if (self.alignView.superview) {
+        [self.alignView removeFromSuperview];
+    }
+    if (self.colorView.superview) {
+        [self.colorView removeFromSuperview];
+    }
+}
+
+- (void)showFontStyleViewWithSender:(UIButton *)sender {
+    [self updateFontStyleViewFrame:sender];
+    if (sender.isSelected) {
+        [self.view addSubview:self.styleView];
+    } else {
+        [self.styleView removeFromSuperview];
+    }
+}
+
+- (void)showFontSizeViewWithSender:(UIButton *)sender {
+    [self updateFontSizeViewFrame:sender];
+    if (sender.isSelected) {
+        [self.view addSubview:self.sizeView];
+    } else {
+        [self.sizeView removeFromSuperview];
+    }
+}
+
+- (void)showAlignViewWithSender:(UIButton *)sender {
+    [self updateAlignViewFrame:sender];
+    if (sender.isSelected) {
+        [self.view addSubview:self.alignView];
+    } else {
+        [self.alignView removeFromSuperview];
+    }
+}
+
+- (void)showFontColorViewWithSender:(UIButton *)sender {
+    [self updateFontColorViewFrame:sender];
+    if (sender.isSelected) {
+        [self.view addSubview:self.colorView];
+    } else {
+        [self.colorView removeFromSuperview];
+    }
+}
+
+#pragma mark - getter方法
+- (UIWebView *)editorView {
+    if (!_editorView) {
+        _editorView = [[UIWebView alloc] init];
+        _editorView.delegate = self;
+        _editorView.hidesInputAccessoryView = YES;
+        _editorView.keyboardDisplayRequiresUserAction = NO;
+        _editorView.scalesPageToFit = YES;
+        _editorView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+        _editorView.dataDetectorTypes = UIDataDetectorTypeNone;
+        _editorView.scrollView.bounces = NO;
+        _editorView.backgroundColor = [UIColor whiteColor];
+    }
+    return _editorView;
+}
+
+- (QTRichTextToolBar *)toolBar {
+    if (!_toolBar) {
+        _toolBar = [[QTRichTextToolBar alloc] init];
+        _toolBar.delegate = self;
+    }
+    return _toolBar;
+}
+
+- (QTFontStyleView *)styleView {
+    if (!_styleView) {
+        _styleView = [[QTFontStyleView alloc] init];
+    }
+    return _styleView;
+}
+
+- (QTFontSizeView *)sizeView {
+    if (!_sizeView) {
+        _sizeView = [[QTFontSizeView alloc] init];
+    }
+    return _sizeView;
+}
+
+- (QTAlignView *)alignView {
+    if (!_alignView) {
+        _alignView = [[QTAlignView alloc] init];
+    }
+    return _alignView;
+}
+
+- (QTFontColorView *)colorView {
+    if (!_colorView) {
+        _colorView = [[QTFontColorView alloc] init];
+    }
+    return _colorView;
+}
+
+#pragma mark - setter方法
+- (void)setPlaceholder:(NSString *)placeholder {
+    _placeholder = placeholder;
+    if (self.isFinishLoad && _placeholder && [_placeholder length] != 0) {
+        [self.editorView qt_setPlaceholderText:_placeholder];
+    }
+}
+
 @end
 
 
