@@ -10,7 +10,6 @@
 		601FE5AA22E7FF3200A11804 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE5A922E7FF3200A11804 /* AppDelegate.m */; };
 		601FE5AD22E7FF3200A11804 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE5AC22E7FF3200A11804 /* ViewController.m */; };
 		601FE5B022E7FF3200A11804 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 601FE5AE22E7FF3200A11804 /* Main.storyboard */; };
-		601FE5B222E7FF3400A11804 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 601FE5B122E7FF3400A11804 /* Assets.xcassets */; };
 		601FE5B522E7FF3400A11804 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 601FE5B322E7FF3400A11804 /* LaunchScreen.storyboard */; };
 		601FE5B822E7FF3400A11804 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE5B722E7FF3400A11804 /* main.m */; };
 		601FE5CB22E7FFCE00A11804 /* icon_refresh.png in Resources */ = {isa = PBXBuildFile; fileRef = 601FE5C522E7FFCE00A11804 /* icon_refresh.png */; };
@@ -28,6 +27,8 @@
 		601FE6CD22E8539B00A11804 /* QTFontSizeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE6CC22E8539B00A11804 /* QTFontSizeView.m */; };
 		601FE6D022E853AE00A11804 /* QTAlignView.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE6CF22E853AE00A11804 /* QTAlignView.m */; };
 		601FE6D322E853BE00A11804 /* QTFontColorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE6D222E853BE00A11804 /* QTFontColorView.m */; };
+		601FE6D622E99E7600A11804 /* QTRichTextEditorDemo.m in Sources */ = {isa = PBXBuildFile; fileRef = 601FE6D522E99E7600A11804 /* QTRichTextEditorDemo.m */; };
+		601FE70B22E9B72300A11804 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 601FE70A22E9B72200A11804 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,7 +38,6 @@
 		601FE5AB22E7FF3200A11804 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		601FE5AC22E7FF3200A11804 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		601FE5AF22E7FF3200A11804 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		601FE5B122E7FF3400A11804 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		601FE5B422E7FF3400A11804 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		601FE5B622E7FF3400A11804 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		601FE5B722E7FF3400A11804 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -67,6 +67,9 @@
 		601FE6CF22E853AE00A11804 /* QTAlignView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QTAlignView.m; sourceTree = "<group>"; };
 		601FE6D122E853BE00A11804 /* QTFontColorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QTFontColorView.h; sourceTree = "<group>"; };
 		601FE6D222E853BE00A11804 /* QTFontColorView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QTFontColorView.m; sourceTree = "<group>"; };
+		601FE6D422E99E7600A11804 /* QTRichTextEditorDemo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QTRichTextEditorDemo.h; sourceTree = "<group>"; };
+		601FE6D522E99E7600A11804 /* QTRichTextEditorDemo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QTRichTextEditorDemo.m; sourceTree = "<group>"; };
+		601FE70A22E9B72200A11804 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,8 +107,10 @@
 				601FE5A922E7FF3200A11804 /* AppDelegate.m */,
 				601FE5AB22E7FF3200A11804 /* ViewController.h */,
 				601FE5AC22E7FF3200A11804 /* ViewController.m */,
+				601FE6D422E99E7600A11804 /* QTRichTextEditorDemo.h */,
+				601FE6D522E99E7600A11804 /* QTRichTextEditorDemo.m */,
+				601FE70A22E9B72200A11804 /* Assets.xcassets */,
 				601FE5AE22E7FF3200A11804 /* Main.storyboard */,
-				601FE5B122E7FF3400A11804 /* Assets.xcassets */,
 				601FE5B322E7FF3400A11804 /* LaunchScreen.storyboard */,
 				601FE5B622E7FF3400A11804 /* Info.plist */,
 				601FE5B722E7FF3400A11804 /* main.m */,
@@ -230,10 +235,10 @@
 				601FE6B922E80B7900A11804 /* QTRichTextEditor.html in Resources */,
 				601FE6B822E80A0500A11804 /* QTRichTextEditor.js in Resources */,
 				601FE5B522E7FF3400A11804 /* LaunchScreen.storyboard in Resources */,
-				601FE5B222E7FF3400A11804 /* Assets.xcassets in Resources */,
 				601FE5B022E7FF3200A11804 /* Main.storyboard in Resources */,
 				601FE6BF22E82B5900A11804 /* jQuery.js in Resources */,
 				601FE5CB22E7FFCE00A11804 /* icon_refresh.png in Resources */,
+				601FE70B22E9B72300A11804 /* Assets.xcassets in Resources */,
 				601FE6C022E82B5900A11804 /* JSBeautifier.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,6 +263,7 @@
 				601FE5D222E7FFF400A11804 /* UIWebView+QTHideAccessoryView.m in Sources */,
 				601FE5D422E7FFF400A11804 /* UIControl+QTButtonExtension.m in Sources */,
 				601FE6BC22E80C4D00A11804 /* QTRichTextToolBar.m in Sources */,
+				601FE6D622E99E7600A11804 /* QTRichTextEditorDemo.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

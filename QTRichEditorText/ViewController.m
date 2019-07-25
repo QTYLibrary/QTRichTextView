@@ -146,9 +146,11 @@
 
 - (void)editorDidChangeWithText:(NSString *)text andHTML:(NSString *)html {
     NSLog(@"editorDidChangeWithText=>text: %@, html: %@", text, html);
-//    if (text.length > kMAX_INPUT_COUNT) {
-//        [self.editorView ];
-//    }
+    html = [html stringByReplacingOccurrencesOfString:@"</font>" withString:@"</span>"];
+    html = [html stringByReplacingOccurrencesOfString:@"<font size=\"4\">" withString:@"<span style=\"font-size:20px;\">"];
+    html = [html stringByReplacingOccurrencesOfString:@"<font size=\"3\">" withString:@"<span style=\"font-size:16px;\">"];
+    html = [html stringByReplacingOccurrencesOfString:@"<font size=\"2\">" withString:@"<span style=\"font-size:12px;\">"];
+    NSLog(@"editorDidChangeWithText=>replace: %@", html);
 }
 
 - (void)checkForMentionOrHashtagInText:(NSString *)text {
@@ -259,6 +261,10 @@
     
     if (_placeholder && [_placeholder length] != 0) {
         [self.editorView qt_setPlaceholderText:_placeholder];
+    }
+    
+    if (self.html && [self.html length] != 0) {
+        [self.editorView qt_setHTML:self.html];
     }
     
     [self observerEditorTextDidChanged:webView];
@@ -605,6 +611,13 @@
     _placeholder = placeholder;
     if (self.isFinishLoad && _placeholder && [_placeholder length] != 0) {
         [self.editorView qt_setPlaceholderText:_placeholder];
+    }
+}
+
+- (void)setHtml:(NSString *)html {
+    _html = html;
+    if (self.isFinishLoad && _html && [_html length] != 0) {
+        [self.editorView qt_setHTML:_html];
     }
 }
 

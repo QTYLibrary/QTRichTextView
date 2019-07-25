@@ -164,10 +164,10 @@
         }
     } else if (self.hasItalic && self.hasUnderLine) {
         if (self.styleBtn.isSelected) {
-            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarItalicUnderLine"] forState:UIControlStateNormal];
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarUnderLineItalic"] forState:UIControlStateNormal];
             [self.styleBtn setTintColor:[UIColor whiteColor]];
         } else {
-            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarItalicUnderLine"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarUnderLineItalic"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
             [self.styleBtn setTintColor:[UIColor clearColor]];
         }
     } else if (self.hasBold) {
@@ -208,13 +208,13 @@
 - (void)updateSizeBtnStatu {
     if (self.isSmallSize) {
         if (self.sizeBtn.isSelected) {
-            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarSmallSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarSmallSize_Selected"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
         } else {
             [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarSmallSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
         }
     } else if (self.isBigSize) {
         if (self.sizeBtn.isSelected) {
-            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarBigSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarBigSize_Selected"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
         } else {
             [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarBigSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
         }

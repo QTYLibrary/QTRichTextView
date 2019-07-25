@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "QTRichTextEditorDemo.h"
 
 @interface AppDelegate ()
 
@@ -17,6 +18,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    QTRichTextEditorDemo *demo = [[QTRichTextEditorDemo alloc] init];
+    UINavigationController *rootController = [[UINavigationController alloc] initWithRootViewController:demo];
+    self.window.rootViewController = rootController;
+    [self.window makeKeyAndVisible];
     return YES;
 }
 
