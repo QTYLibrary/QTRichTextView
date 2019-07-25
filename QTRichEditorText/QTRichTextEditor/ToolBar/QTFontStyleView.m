@@ -29,6 +29,19 @@
  */
 @property (nonatomic, assign) BOOL isInited;
 
+/**
+ 是否有粗体
+ */
+@property (nonatomic, assign) BOOL hasBold;
+/**
+ 是否有斜体
+ */
+@property (nonatomic, assign) BOOL hasItalic;
+/**
+ 是否有下划线
+ */
+@property (nonatomic, assign) BOOL hasUnderLine;
+
 @end
 
 @implementation QTFontStyleView
@@ -60,6 +73,59 @@
     [super layoutSubviews];
     if (self.isInited) {
         [self updateViewsFrame];
+    }
+}
+
+#pragma mark - 类方法
+- (void)updateItemsStatu:(NSString *)statu {
+    if (!statu) {
+        return;
+    }
+    NSArray *status = [statu componentsSeparatedByString:@","];
+    self.hasBold = [status containsObject:@"bold"];
+    self.hasItalic = [status containsObject:@"italic"];
+    self.hasUnderLine = [status containsObject:@"underline"];
+    
+    [self updateAllItemStatu];
+}
+
+#pragma mark - 其他方法
+- (void)updateAllItemStatu {
+    [self updateBoldStatu];
+    [self updateItalicStatu];
+    [self updateUnderLineStatu];
+}
+
+- (void)updateBoldStatu {
+    self.boldBtn.selected = self.hasBold;
+    if (self.hasBold) {
+        [self.boldBtn setImage:[UIImage imageNamed:@"Blod"] forState:UIControlStateSelected];
+        [self.boldBtn setTintColor:[UIColor whiteColor]];
+    } else {
+        [self.boldBtn setImage:[[UIImage imageNamed:@"Blod"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateSelected];
+        [self.boldBtn setTintColor:[UIColor clearColor]];
+    }
+}
+
+- (void)updateItalicStatu {
+    self.italicBtn.selected = self.hasItalic;
+    if (self.hasItalic) {
+        [self.italicBtn setImage:[UIImage imageNamed:@"Italic"] forState:UIControlStateSelected];
+        [self.italicBtn setTintColor:[UIColor whiteColor]];
+    } else {
+        [self.italicBtn setImage:[[UIImage imageNamed:@"Italic"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateSelected];
+        [self.italicBtn setTintColor:[UIColor clearColor]];
+    }
+}
+
+- (void)updateUnderLineStatu {
+    self.underLineBtn.selected = self.hasUnderLine;
+    if (self.hasUnderLine) {
+        [self.underLineBtn setImage:[UIImage imageNamed:@"UnderLine"] forState:UIControlStateSelected];
+        [self.underLineBtn setTintColor:[UIColor whiteColor]];
+    } else {
+        [self.underLineBtn setImage:[[UIImage imageNamed:@"UnderLine"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateSelected];
+        [self.underLineBtn setTintColor:[UIColor clearColor]];
     }
 }
 
@@ -108,11 +174,13 @@
 }
 
 - (UIButton *)createButtonWithTag:(NSInteger)tag andImage:(UIImage *)image {
-    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeSystem];
     btn.tag = tag;
-    [btn setImage:image forState:UIControlStateNormal];
-    [btn setBackgroundImage:[UIImage imageWithColor:[UIColor colorWithRed:255/255.0 green:120/255.0 blue:7/255.0 alpha:1.0]] forState:UIControlStateSelected];
-    [btn setBackgroundImage:[UIImage imageWithColor:[UIColor clearColor]] forState:UIControlStateNormal];
+    [btn setTintColor:[UIColor clearColor]];
+    [btn setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+    [btn setBackgroundImage:[[UIImage imageWithColor:[UIColor colorWithRed:255/255.0 green:120/255.0 blue:7/255.0 alpha:1.0]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateSelected];
+    [btn setBackgroundImage:[[UIImage imageWithColor:[UIColor colorWithRGBHex:0xcccccc]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateHighlighted];
+    [btn setBackgroundImage:[[UIImage imageWithColor:[UIColor clearColor]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
     [btn addTarget:self action:@selector(onButtonClick:) forControlEvents:UIControlEventTouchUpInside];
     return btn;
 }

@@ -38,6 +38,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, weak) id<QTFontSizeViewDelegate> delegate;
 
+/**
+ 更新视图状态
+ 
+ @param statu 状态
+ */
+- (void)updateItemsStatu:(NSString *)statu;
+
 @end
 
 NS_ASSUME_NONNULL_END

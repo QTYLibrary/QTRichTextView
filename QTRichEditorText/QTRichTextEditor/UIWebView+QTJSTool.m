@@ -164,6 +164,11 @@ typedef struct{
     [self stringByEvaluatingJavaScriptFromString:trigger];
 }
 
+- (void)qt_setFontSize:(NSString *)size {
+    NSString *trigger = [NSString stringWithFormat:@"qt_editor.setFontSize(\"%@\");", size];
+    [self stringByEvaluatingJavaScriptFromString:trigger];
+}
+
 - (void)qt_paragraph {
     NSString *trigger = @"qt_editor.setParagraph();";
     [self stringByEvaluatingJavaScriptFromString:trigger];
@@ -221,37 +226,19 @@ typedef struct{
     [self stringByEvaluatingJavaScriptFromString:trigger];
 }
 
-- (void)qt_textColor {
+- (void)qt_textColor:(UIColor *)color {
     // Save the selection location
     [self stringByEvaluatingJavaScriptFromString:@"qt_editor.prepareInsert();"];
-//    // Call the picker
-//    HRColorPickerViewController *colorPicker = [HRColorPickerViewController cancelableFullColorPickerViewControllerWithColor:[UIColor whiteColor]];
-//    colorPicker.delegate = self;
-//    colorPicker.tag = 1;
-//    colorPicker.title = NSLocalizedString(@"Text Color", nil);
-//    [self.navigationController pushViewController:colorPicker animated:YES];
-    
+    NSString *hex = [NSString stringWithFormat:@"#%06x",HexColorFromUIColor(color)];
+    NSString *trigger = [NSString stringWithFormat:@"qt_editor.setTextColor(\"%@\");", hex];
+    [self stringByEvaluatingJavaScriptFromString:trigger];
 }
 
-- (void)qt_bgColor {
+- (void)qt_bgColor:(UIColor *)color {
     // Save the selection location
     [self stringByEvaluatingJavaScriptFromString:@"qt_editor.prepareInsert();"];
-    // Call the picker
-//    HRColorPickerViewController *colorPicker = [HRColorPickerViewController cancelableFullColorPickerViewControllerWithColor:[UIColor whiteColor]];
-//    colorPicker.delegate = self;
-//    colorPicker.tag = 2;
-//    colorPicker.title = NSLocalizedString(@"BG Color", nil);
-//    [self.navigationController pushViewController:colorPicker animated:YES];
-}
-
-- (void)qt_setSelectedColor:(UIColor*)color tag:(int)tag {
-    NSString *hex = [NSString stringWithFormat:@"#%06x", HexColorFromUIColor(color)];
-    NSString *trigger;
-    if (tag == 1) {
-        trigger = [NSString stringWithFormat:@"qt_editor.setTextColor(\"%@\");", hex];
-    } else if (tag == 2) {
-        trigger = [NSString stringWithFormat:@"qt_editor.setBackgroundColor(\"%@\");", hex];
-    }
+    NSString *hex = [NSString stringWithFormat:@"#%06x",HexColorFromUIColor(color)];
+    NSString *trigger = [NSString stringWithFormat:@"qt_editor.setBackgroundColor(\"%@\");", hex];
     [self stringByEvaluatingJavaScriptFromString:trigger];
 }
 

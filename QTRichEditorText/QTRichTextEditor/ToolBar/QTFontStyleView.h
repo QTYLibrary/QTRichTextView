@@ -36,7 +36,14 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  代理
  */
-@property (nonatomic, copy) id<QTFontStyleViewDelegate> delegate;
+@property (nonatomic, weak) id<QTFontStyleViewDelegate> delegate;
+
+/**
+ 更新视图状态
+
+ @param statu 状态
+ */
+- (void)updateItemsStatu:(NSString *)statu;
 
 @end
 

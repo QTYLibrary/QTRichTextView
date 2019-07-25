@@ -39,6 +39,43 @@
  */
 @property (nonatomic, assign) BOOL isInited;
 
+/**
+ 是否有粗体
+ */
+@property (nonatomic, assign) BOOL hasBold;
+/**
+ 是否有斜体
+ */
+@property (nonatomic, assign) BOOL hasItalic;
+/**
+ 是否有下划线
+ */
+@property (nonatomic, assign) BOOL hasUnderLine;
+/**
+ 是否是小号字体
+ */
+@property (nonatomic, assign) BOOL isSmallSize;
+/**
+ 是否是正常字体
+ */
+@property (nonatomic, assign) BOOL isNormalSize;
+/**
+ 是否是大号字体
+ */
+@property (nonatomic, assign) BOOL isBigSize;
+/**
+ 是否是左对齐
+ */
+@property (nonatomic, assign) BOOL isLeftAlign;
+/**
+ 是否是居中对齐
+ */
+@property (nonatomic, assign) BOOL isCenterAlign;
+/**
+ 是否是右对齐
+ */
+@property (nonatomic, assign) BOOL isRightAlign;
+
 @end
 
 @implementation QTRichTextToolBar
@@ -75,7 +112,147 @@
 
 #pragma mark - 类方法
 - (void)updateItemsStatu:(NSString *)statu {
+    NSLog(@"updateItemsStatu=>statu: %@", statu);
+    if (!statu) {
+        return;
+    }
+    NSArray *status = [statu componentsSeparatedByString:@","];
+    self.hasBold = [status containsObject:@"bold"];
+    self.hasItalic = [status containsObject:@"italic"];
+    self.hasUnderLine = [status containsObject:@"underline"];
+    self.isSmallSize = [status containsObject:@"fontSize:2"];
+    self.isNormalSize = [status containsObject:@"fontSize:3"];
+    self.isBigSize = [status containsObject:@"fontSize:4"];
+    self.isLeftAlign = [status containsObject:@"justifyLeft"];
+    self.isCenterAlign = [status containsObject:@"justifyCenter"];
+    self.isRightAlign = [status containsObject:@"justifyRight"];
     
+    [self updateAllItemStatus];
+}
+
+#pragma mark - 其他方法
+- (void)updateAllItemStatus {
+    [self updateStyleBtnStatu];
+    [self updateSizeBtnStatu];
+    [self updateAlignBtnStatu];
+}
+
+- (void)updateStyleBtnStatu {
+    if (self.hasBold && self.hasItalic && self.hasUnderLine) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarBoldUnderLineItalic"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarBoldUnderLineItalic"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasBold && self.hasItalic) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarBoldItalic"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarBoldItalic"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasBold && self.hasUnderLine) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarBoldUnderLine"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarBoldUnderLine"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasItalic && self.hasUnderLine) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarItalicUnderLine"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarItalicUnderLine"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasBold) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarBold"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarBold"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasItalic) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarItalic"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarItalic"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.hasUnderLine) {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"ToolBarUnderLine"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"ToolBarUnderLine"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    } else {
+        if (self.styleBtn.isSelected) {
+            [self.styleBtn setImage:[UIImage imageNamed:@"FontStyle"] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.styleBtn setImage:[[UIImage imageNamed:@"FontStyle"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.styleBtn setTintColor:[UIColor clearColor]];
+        }
+    }
+}
+
+- (void)updateSizeBtnStatu {
+    if (self.isSmallSize) {
+        if (self.sizeBtn.isSelected) {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarSmallSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        } else {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarSmallSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        }
+    } else if (self.isBigSize) {
+        if (self.sizeBtn.isSelected) {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarBigSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        } else {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarBigSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        }
+    } else {
+        if (self.sizeBtn.isSelected) {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"ToolBarNormalSize_selected"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        } else {
+            [self.sizeBtn setImage:[[UIImage imageNamed:@"FontSize"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+        }
+    }
+}
+
+- (void)updateAlignBtnStatu {
+    if (self.isCenterAlign) {
+        if (self.alignBtn.isSelected) {
+            [self.alignBtn setImage:[UIImage imageNamed:@"ToolBarCenter"] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.alignBtn setImage:[[UIImage imageNamed:@"ToolBarCenter"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor clearColor]];
+        }
+    } else if (self.isRightAlign) {
+        if (self.alignBtn.isSelected) {
+            [self.alignBtn setImage:[UIImage imageNamed:@"ToolBarRight"] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.alignBtn setImage:[[UIImage imageNamed:@"ToolBarRight"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor clearColor]];
+        }
+    } else {
+        if (self.alignBtn.isSelected) {
+            [self.alignBtn setImage:[UIImage imageNamed:@"Align"] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor whiteColor]];
+        } else {
+            [self.alignBtn setImage:[[UIImage imageNamed:@"Align"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+            [self.alignBtn setTintColor:[UIColor clearColor]];
+        }
+    }
 }
 
 - (void)resetItemsStatu {
@@ -117,14 +294,7 @@
     [self resetOtherItemsStatu:sender];
     BOOL selected = sender.selected;
     [sender setSelected:!selected];
-    NSLog(@"onButtonClick=>last: %d, now: %d", selected, sender.selected);
-    if (sender.tag == 101 || sender.tag == 102 || sender.tag == 103) {
-        if (sender.selected) {
-            [sender setTintColor:[UIColor whiteColor]];
-        } else {
-            [sender setTintColor:[UIColor clearColor]];
-        }
-    }
+    [self updateAllItemStatus];
     if (self.delegate && [self.delegate respondsToSelector:@selector(toolBar:buttonClick:)]) {
         [self.delegate toolBar:self buttonClick:sender];
     }
@@ -168,11 +338,12 @@
 }
 
 - (UIButton *)createSelectedItemButtonWithTag:(NSInteger)tag andImage:(UIImage *)image {
-    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeSystem];
     btn.tag = tag;
     btn.layer.cornerRadius = 3;
     btn.layer.masksToBounds = YES;
-    [btn setImage:image forState:UIControlStateNormal];
+    [btn setTintColor:[UIColor clearColor]];
+    [btn setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
     [btn setBackgroundImage:[UIImage imageWithColor:[UIColor colorWithRed:255/255.0 green:120/255.0 blue:7/255.0 alpha:1.0]] forState:UIControlStateSelected];
     [btn setBackgroundImage:[UIImage imageWithColor:[UIColor clearColor]] forState:UIControlStateNormal];
     [btn addTarget:self action:@selector(onButtonClick:) forControlEvents:UIControlEventTouchUpInside];

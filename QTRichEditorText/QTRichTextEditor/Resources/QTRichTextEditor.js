@@ -337,6 +337,11 @@ qt_editor.setFontFamily = function(fontFamily) {
 		
 }
 
+qt_editor.setFontSize = function(fontSize){
+    document.execCommand("fontSize", false, fontSize);
+    qt_editor.enabledEditingItems();
+}
+
 qt_editor.setTextColor = function(color) {
 		
     qt_editor.restorerange();
@@ -543,6 +548,12 @@ qt_editor.enabledEditingItems = function(e) {
     
     console.log('enabledEditingItems');
     var items = [];
+    
+    var fontSizeblock = document.queryCommandValue('fontSize');
+    if (fontSizeblock.length > 0) {
+        items.push('fontSize:' + fontSizeblock);
+    }
+    
     if (qt_editor.isCommandEnabled('bold')) {
         items.push('bold');
     }
@@ -608,7 +619,21 @@ qt_editor.enabledEditingItems = function(e) {
         // Text Color
         var textColor = t.css('color');
         if (textColor.length != 0 && textColor != 'rgba(0, 0, 0, 0)' && textColor != 'rgb(0, 0, 0)' && textColor != 'transparent') {
-            items.push('textColor');
+            if (textColor == 'rgb(44, 44, 44)') {
+                items.push('textColor:500');
+            } else if (textColor == 'rgb(153, 153, 153)') {
+                items.push('textColor:501');
+            } else if (textColor == 'rgb(250, 85, 85)') {
+                items.push('textColor:502');
+            } else if (textColor == 'rgb(255, 120, 7)') {
+                items.push('textColor:503');
+            } else if (textColor == 'rgb(101, 205, 13)') {
+                items.push('textColor:504');
+            } else if (textColor == 'rgb(55, 151, 247)') {
+                items.push('textColor:505');
+            } else if (textColor == 'rgb(88, 86, 214)') {
+                items.push('textColor:506');
+            }
         }
 		
 		//Fonts

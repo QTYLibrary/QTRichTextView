@@ -78,11 +78,15 @@ typedef NS_ENUM(int16_t, QTFontFamily) {
 
 - (void)qt_heading6;
 
+- (void)qt_setFontSize:(NSString *)size;
+
 - (void)qt_paragraph;
 
 - (void)qt_setSelectedFontFamily:(QTFontFamily)fontFamily;
 
-- (void)qt_setSelectedColor:(UIColor*)color tag:(int)tag;
+- (void)qt_textColor:(UIColor *)color;
+
+- (void)qt_bgColor:(UIColor *)color;
 
 - (void)qt_undo;
 

@@ -41,6 +41,10 @@
  */
 @property (nonatomic, strong) UIButton *purpleBtn;
 /**
+ 当前选中按钮
+ */
+@property (nonatomic, strong) UIButton *selectedButton;
+/**
  是否初始化完成
  */
 @property (nonatomic, assign) BOOL isInited;
@@ -107,12 +111,62 @@
     self.purpleBtn.selected = NO;
 }
 
+#pragma mark - 类方法
+- (void)updateItemsStatu:(NSString *)statu {
+    if (!statu) {
+        return;
+    }
+    NSArray *status = [statu componentsSeparatedByString:@","];
+    if ([status containsObject:@"textColor:501"]) {
+        self.selectedButton = self.grayBtn;
+    } else if ([status containsObject:@"textColor:502"]) {
+        self.selectedButton = self.redBtn;
+    } else if ([status containsObject:@"textColor:503"]) {
+        self.selectedButton = self.orangeBtn;
+    } else if ([status containsObject:@"textColor:504"]) {
+        self.selectedButton = self.greenBtn;
+    } else if ([status containsObject:@"textColor:505"]) {
+        self.selectedButton = self.blueBtn;
+    } else if ([status containsObject:@"textColor:506"]) {
+        self.selectedButton = self.purpleBtn;
+    } else {
+        self.selectedButton = self.blackBtn;
+    }
+}
+
+#pragma mark - 其他方法
+- (void)updateAllItemStatu {
+    if (self.selectedButton != self.blackBtn) {
+        self.blackBtn.selected = NO;
+    }
+    if (self.selectedButton != self.grayBtn) {
+        self.grayBtn.selected = NO;
+    }
+    if (self.selectedButton != self.redBtn) {
+        self.redBtn.selected = NO;
+    }
+    if (self.selectedButton != self.orangeBtn) {
+        self.orangeBtn.selected = NO;
+    }
+    if (self.selectedButton != self.greenBtn) {
+        self.greenBtn.selected = NO;
+    }
+    if (self.selectedButton != self.blueBtn) {
+        self.blueBtn.selected = NO;
+    }
+    if (self.selectedButton != self.purpleBtn) {
+        self.purpleBtn.selected = NO;
+    }
+}
+
 #pragma mark - 按钮点击事件
 - (void)onButtonClick:(UIButton *)sender {
-    if (!sender.isSelected) {
-        [self resetAllItemStatu];
-        [sender setSelected:YES];
+    if (sender.isSelected) {
+        return;
     }
+    sender.selected = YES;
+    self.selectedButton = sender;
+    [self updateAllItemStatu];
     if (self.delegate && [self.delegate respondsToSelector:@selector(fontColorView:buttonClick:)]) {
         [self.delegate fontColorView:self buttonClick:sender];
     }
@@ -122,11 +176,11 @@
 - (void)createViews {
     _blackBtn = [self createButtonWithTag:500 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x2c2c2c] withFrame:CGRectMake(0, 0, 16, 16)]];
     _grayBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x999999] withFrame:CGRectMake(0, 0, 16, 16)]];
-    _redBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0xFA5555] withFrame:CGRectMake(0, 0, 16, 16)]];
-    _orangeBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0xFF7807] withFrame:CGRectMake(0, 0, 16, 16)]];
-    _greenBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x65CD0D] withFrame:CGRectMake(0, 0, 16, 16)]];
-    _blueBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x3797F7] withFrame:CGRectMake(0, 0, 16, 16)]];
-    _purpleBtn = [self createButtonWithTag:501 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x5856D6] withFrame:CGRectMake(0, 0, 16, 16)]];
+    _redBtn = [self createButtonWithTag:502 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0xFA5555] withFrame:CGRectMake(0, 0, 16, 16)]];
+    _orangeBtn = [self createButtonWithTag:503 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0xFF7807] withFrame:CGRectMake(0, 0, 16, 16)]];
+    _greenBtn = [self createButtonWithTag:504 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x65CD0D] withFrame:CGRectMake(0, 0, 16, 16)]];
+    _blueBtn = [self createButtonWithTag:505 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x3797F7] withFrame:CGRectMake(0, 0, 16, 16)]];
+    _purpleBtn = [self createButtonWithTag:506 andImage:[UIImage imageWithColor:[UIColor colorWithRGBHex:0x5856D6] withFrame:CGRectMake(0, 0, 16, 16)]];
     
     self.backgroundColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:1.0];
     self.layer.shadowColor = [UIColor colorWithRed:0/255.0 green:0/255.0 blue:0/255.0 alpha:0.16].CGColor;
@@ -134,6 +188,10 @@
     self.layer.shadowRadius = 4;
     self.layer.shadowOpacity = 1;
     self.layer.cornerRadius = 5;
+    
+    self.blackBtn.selected = YES;
+    self.selectedButton = self.blackBtn;
+    [self updateAllItemStatu];
     
     [self addSubview:self.blackBtn];
     [self addSubview:self.grayBtn];
